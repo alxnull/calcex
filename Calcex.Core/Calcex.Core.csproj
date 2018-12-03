@@ -1,7 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.0</TargetFramework>
+      <BuildYear>$([System.DateTime]::Now.ToString(yy))</BuildYear>
+      <BuildDay>$([System.DateTime]::Now.DayOfYear)</BuildDay>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.1;net45</TargetFrameworks>
+    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionSuffix>$(VersionSuffix)</VersionSuffix>
+    <AssemblyVersion>0.2.0.$(BuildYear)$(BuildDay)</AssemblyVersion>
+    <Authors>Bluegrams</Authors>
+    <Company>Bluegrams</Company>
+    <Product>Calcex</Product>
+    <PackageId>calcex.core</PackageId>
+    <Description>Calcex is a basic parser and evaluator for mathematical expressions built on .NET Core.</Description>
+    <Copyright>© 2018 Bluegrams</Copyright>
+    <PackageLicenseUrl>https://github.com/bluegrams/calcex/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/bluegrams/calcex</PackageProjectUrl>
+    <PackageTags>math parser evaluator expression calculator</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <RootNamespace>Bluegrams.Calcex</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <GenerateDocumentationFile>true</GenerateDocumentationFile>
+      <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
 </Project>

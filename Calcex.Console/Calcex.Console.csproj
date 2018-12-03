@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <BuildYear>$([System.DateTime]::Now.ToString(yy))</BuildYear>
+      <BuildDay>$([System.DateTime]::Now.DayOfYear)</BuildDay>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.0;net471;net45</TargetFrameworks>
+    <AssemblyVersion>0.1.0.$(BuildYear)$(BuildDay)</AssemblyVersion>
+    <AssemblyName>calcex</AssemblyName>
+    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Packaging.Tools.Trimming" Version="1.1.0-preview1-26619-01" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Calcex.Core\Calcex.Core.csproj" />
+  </ItemGroup>
+
+</Project>

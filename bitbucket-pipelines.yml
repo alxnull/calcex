@@ -1,0 +1,17 @@
+image: microsoft/dotnet:sdk
+
+pipelines:
+  default:
+    - step:
+        name: Build and test
+        caches:
+          - dotnetcore
+        script:
+          - export BUILD_NUMBER=$(printf %03d $BITBUCKET_BUILD_NUMBER)
+          - export VersionSuffix=build${BUILD_NUMBER}-netstandard
+          - dotnet restore
+          - dotnet build Calcex.Core -f netstandard1.1
+          - dotnet test Calcex.Tests
+          - dotnet pack Calcex.Core -c Release -p:TargetFrameworks=netstandard1.1
+        artifacts:
+          - Calcex.Core/bin/Release/**
