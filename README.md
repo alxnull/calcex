@@ -1,5 +1,10 @@
 # Calcex
 
+[![Build status](https://ci.appveyor.com/api/projects/status/to343qmkhi2v5lae?svg=true)](https://ci.appveyor.com/project/bluegrams/calcex)
+[![](https://img.shields.io/appveyor/tests/bluegrams/calcex.svg)](https://ci.appveyor.com/project/bluegrams/calcex)
+[![](https://img.shields.io/github/license/bluegrams/calcex.svg)](https://github.com/bluegrams/calcex/blob/master/LICENSE.txt)
+[![](https://img.shields.io/nuget/v/calcex.core.svg)](https://www.nuget.org/packages/calcex.core/)
+
 Calcex is a simple mathematical expression parser and evaluator for .NET.
 This repository contains _calcex.core_, the actual .NET parser library,
 and the _calcex_ command-line app.
