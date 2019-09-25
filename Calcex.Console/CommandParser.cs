@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Bluegrams.Calcex.CalcexConsole
+namespace Calcex.CalcexConsole
 {
     public class CommandParser
     {

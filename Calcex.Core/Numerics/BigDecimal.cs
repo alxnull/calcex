@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
-namespace Bluegrams.Calcex.Numerics
+namespace Calcex.Numerics
 {
     /// <summary>
     /// Represents an arbitrarily precisioned decimal.

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Parsing;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex
+namespace Calcex
 {
     /// <summary>
     /// A simple math parser for parsing and evaluating mathematical expressions.
@@ -27,7 +27,7 @@ namespace Bluegrams.Calcex
         /// </summary>
         public string[] CustomFunctions { get { return FunctionsDict.Keys.ToArray(); } }
 
-        internal Dictionary<string, MathFunc> FunctionsDict { get; private set; }
+        internal Dictionary<string, ArrayFunc> FunctionsDict { get; private set; }
 
         /// <summary>
         /// Gets or sets the separator style used for this parser.
@@ -50,7 +50,7 @@ namespace Bluegrams.Calcex
             Tokenizer = new Tokenizer();
             Tokenizer.SetSeparatorStyle(SeparatorStyle);
             variables = new Dictionary<string, object>();
-            FunctionsDict = new Dictionary<string, MathFunc>();
+            FunctionsDict = new Dictionary<string, ArrayFunc>();
         }
 
         /// <summary>
@@ -110,8 +110,7 @@ namespace Bluegrams.Calcex
         /// <returns>true if the expression is valid, otherwise false.</returns>
         public bool IsValid(string input)
         {
-            Exception o;
-            return IsValid(input, out o);
+            return IsValid(input, out Exception o);
         }
 
         /// <summary>
@@ -215,7 +214,7 @@ namespace Bluegrams.Calcex
 
         #region Functions
 
-        private void add_MathFunc(string name, MathFunc func, int paramNum = -1)
+        private void addFuncHelper(string name, ArrayFunc func, int paramNum = -1)
         {
             if (variables.ContainsKey(name) || !var_match(name))
                 throw new ArgumentException($"Given function name '{name}' is either invalid or already exists.");
@@ -227,66 +226,49 @@ namespace Bluegrams.Calcex
         /// Adds a custom function with one parameter.
         /// </summary>
         /// <param name="name">The name of the function.</param>
-        /// <param name="method">The delegate of the functions method with one parameter.</param>
-        public void AddOneParamFunction(string name, Func<double, double> method)
-        {
-            add_MathFunc(name, v => method(v[0]), 1);
-        }
+        /// <param name="method">The function's delegate, taking one parameter.</param>
+        public void AddFunction(string name, Func<double, double> method)
+            => addFuncHelper(name, v => method(v[0]), 1);
 
         /// <summary>
         /// Adds a custom function with two parameters.
         /// </summary>
         /// <param name="name">The name of the function.</param>
-        /// <param name="method">The delegate of the function's method with two parameters.</param>
-        public void AddTwoParamFunction(string name, Func<double, double, double> method)
-        {
-            add_MathFunc(name, v => method(v[0], v[1]), 2);
-        }
+        /// <param name="method">The function's delegate, taking two parameters.</param>
+        public void AddFunction(string name, Func<double, double, double> method)
+            => addFuncHelper(name, v => method(v[0], v[1]), 2);
 
         /// <summary>
         /// Adds a custom function with three parameters.
         /// </summary>
         /// <param name="name">The name of the function.</param>
-        /// <param name="method">The delegate of the function's method with three parameters.</param>
-        public void AddThreeParamFunction(string name, Func<double, double, double, double> method)
-        {
-            add_MathFunc(name, v => method(v[0], v[1], v[2]), 3);
-        }
+        /// <param name="method">The function's delegate, taking three parameters.</param>
+        public void AddFunction(string name, Func<double, double, double, double> method)
+            => addFuncHelper(name, v => method(v[0], v[1], v[2]), 3);
 
         /// <summary>
-        /// Adds a custom function with multiple parameters.
+        /// Adds a custom function with an array of values as parameter.
         /// </summary>
         /// <param name="name">The name of the function.</param>
-        /// <param name="method">The MathFunc-delegate of the function's method.</param>
-        public void AddMultiParamFunction(string name, MathFunc method)
-        {
-            add_MathFunc(name, method);
-        }
+        /// <param name="method">The function's delegate, taking an array as parameter.</param>
+        public void AddFunction(string name, ArrayFunc method)
+            => addFuncHelper(name, method);
 
         /// <summary>
-        /// Adds a custom function with a mathematical expression string.
+        /// Adds a custom function specified by a mathematical expression string.
         /// </summary>
         /// <param name="name">The name of the function.</param>
-        /// <param name="expression">The method of the function as expression string</param>
-        /// <param name="args">A list of the names of the function's arguments.</param>
+        /// <param name="expression">The function definition as an expression string</param>
+        /// <param name="args">A list of the names of the function's parameters.</param>
         public void AddFunction(string name, string expression, params string[] args)
         {
-            if (variables.ContainsKey(name) || !var_match(name)) 
-                throw new ArgumentException($"Given function name '{name}' is either invalid or already exists.");
-            Tokenizer.TokenDict.Add(name, new Tuple<Type, int>(typeof(CallerFuncToken), args.Length));
             Parser funcParser = new Parser(args);
             try 
             {
-                ParserResult funcResult = funcParser.Parse(expression);
-                MathFunc func = delegate (double[] v)
-                {
-                    for (int i = 0; i < args.Length; i++)
-                        funcParser.SetVariable(args[i], v[i]);
-                    return funcResult.Evaluate();
-                };
-                FunctionsDict.Add(name, func);
+                ArrayFunc func = funcParser.Parse(expression).Compile(args);
+                addFuncHelper(name, func, args.Length);
             }
-            catch (Exception ex)
+            catch (ParserException ex)
             { 
                 throw new InvalidFunctionException(name, ex); 
             }
@@ -379,11 +361,4 @@ namespace Bluegrams.Calcex
         }
         #endregion
     }
-
-    /// <summary>
-    /// A delegate for a method calculating a result out of a given array of doubles.
-    /// </summary>
-    /// <param name="args">An array of doubles given as input.</param>
-    /// <returns>A double value.</returns>
-    public delegate double MathFunc(double[] args);
 }

@@ -1,8 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Bluegrams.Calcex;
 
-namespace Bluegrams.Calcex.Tests
+namespace Calcex.Tests
 {
     [TestClass]
     public class UtilsTests

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <BuildYear>$([System.DateTime]::Now.ToString(yy))</BuildYear>
@@ -10,23 +10,29 @@
     <VersionPrefix>0.2.0</VersionPrefix>
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
     <AssemblyVersion>0.2.0.$(BuildYear)$(BuildDay)</AssemblyVersion>
-    <Authors>Bluegrams</Authors>
-    <Company>Bluegrams</Company>
+    <Authors>alxnull</Authors>
     <Product>Calcex</Product>
     <PackageId>calcex.core</PackageId>
     <Description>Calcex is a basic parser and evaluator for mathematical expressions built on .NET Core.</Description>
-    <Copyright>© 2018 Bluegrams</Copyright>
-    <PackageLicenseUrl>https://github.com/bluegrams/calcex/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/bluegrams/calcex</PackageProjectUrl>
+    <Copyright>© 2019 alxnull</Copyright>
+    <PackageLicenseUrl>https://github.com/alxnull/calcex/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/alxnull/calcex</PackageProjectUrl>
     <PackageTags>math parser evaluator expression calculator</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <RootNamespace>Bluegrams.Calcex</RootNamespace>
+    <RootNamespace>Calcex</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup>
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
       <NoWarn>1591</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-preview.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>

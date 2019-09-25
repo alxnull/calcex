@@ -1,6 +1,5 @@
-using System;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex
 {
     public class EvaluationException : ParserException
     {

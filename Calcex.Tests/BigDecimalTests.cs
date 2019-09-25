@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using Bluegrams.Calcex.Numerics;
+using Calcex.Numerics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 
-namespace Bluegrams.Calcex.Tests
+namespace Calcex.Tests
 {
     [TestClass]
     public class BigDecimalTests

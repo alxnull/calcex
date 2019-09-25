@@ -1,8 +1,8 @@
-using Bluegrams.Calcex.Evaluation;
+using Calcex.Evaluation;
 
-namespace Bluegrams.Calcex.Parsing.Tokens
+namespace Calcex.Parsing.Tokens
 {
-     /// <summary>
+    /// <summary>
     /// The base class of all tokens that can be part of the parsed syntax tree.
     /// </summary>
     public abstract class TreeToken : Token

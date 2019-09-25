@@ -1,6 +1,6 @@
-﻿using Bluegrams.Calcex.Parsing.Tokens;
+﻿using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     /// <summary>
     /// The base class for all evaluators.
@@ -8,12 +8,13 @@ namespace Bluegrams.Calcex.Evaluation
     public abstract class Evaluator<T>
     {
         protected Parser parser;
-        protected EvaluationOptions options;
 
-        public Evaluator(Parser parser, EvaluationOptions options)
+        public EvaluationContext Context { get; }
+
+        public Evaluator(Parser parser, EvaluationContext context)
         {
             this.parser = parser;
-            this.options = options;
+            this.Context = context;
         }
 
         /// <summary>
@@ -29,6 +30,13 @@ namespace Bluegrams.Calcex.Evaluation
         /// <param name="token">The token to be evaluated.</param>
         /// <returns>The evaluated value.</returns>
         public abstract T EvaluateFunction(FuncToken token);
+
+        /// <summary>
+        /// Evaluates a given iteration function token.
+        /// </summary>
+        /// <param name="token">The token to be evaluated.</param>
+        /// <returns>The evaluated value.</returns>
+        public abstract T EvaluateVarFunction(VarFuncToken token);
 
         /// <summary>
         /// Evaluates a given number token.

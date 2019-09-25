@@ -1,4 +1,5 @@
-namespace Bluegrams.Calcex.Parsing
+
+namespace Calcex
 {
     /// <summary>
     /// The exception that is thrown if the snytax of the input expression is invalid.

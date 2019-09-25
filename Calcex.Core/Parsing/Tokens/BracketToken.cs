@@ -1,6 +1,6 @@
 using System;
 
-namespace Bluegrams.Calcex.Parsing.Tokens
+namespace Calcex.Parsing.Tokens
 {
     public abstract class BracketToken : Token
     {

@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
-using Bluegrams.Calcex;
-using Bluegrams.Calcex.Parsing;
 using System.IO;
-using System.Globalization;
+using Calcex.Parsing;
+using Calcex.Numerics;
+using Calcex.Evaluation;
 
-namespace Bluegrams.Calcex.CalcexConsole
+namespace Calcex.CalcexConsole
 {
     enum EvalMode
     {
@@ -41,7 +40,7 @@ namespace Bluegrams.Calcex.CalcexConsole
             new Command("exit", null, command_exit, "Exits the console.", true)
         });
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args.Length > 0)
             {
@@ -150,7 +149,7 @@ namespace Bluegrams.Calcex.CalcexConsole
                 case EvalMode.Decimal:
                     return res.EvaluateDecimal();
                 case EvalMode.BigDecimal:
-                    return res.EvaluateBigDecimal();
+                    return res.Evaluate<BigDecimal, BigDecimalEvaluator>();
                 case EvalMode.Bool:
                     return res.EvaluateBool();
                 default:

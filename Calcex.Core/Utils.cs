@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Bluegrams.Calcex
+namespace Calcex
 {
     /// <summary>
     /// Additional mathematical functions not included in the parser.

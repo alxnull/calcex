@@ -1,9 +1,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Bluegrams.Calcex;
-using Bluegrams.Calcex.Parsing;
 
-namespace Bluegrams.Calcex.Tests
+namespace Calcex.Tests
 {
     [TestClass]
     public class ParserIsValidTests
@@ -38,6 +36,8 @@ namespace Bluegrams.Calcex.Tests
         // --- Valid syntax for functions ---
         [DataTestMethod]
         [DataRow("sin(pi)+ln(e)-log(2, 10)", true, null)]
+        [DataRow("sqrt(sqrt(9)+sin(pi))", true, null)]
+        [DataRow("min(min(2, 3)-1, sqrt(sqrt(4))+4, cos9*2)", true, null)]
         [DataRow("min(1, 2, 3, -4, -5, 6) + max(-3.5, -2.5, -1, 2.5, 3.5)", true, null)]
         [DataRow("cos10*ceil3.45+fact10-degtan5", true, null)]
         [DataRow("atan-19", false, typeof(ParserSyntaxException))]
@@ -53,19 +53,18 @@ namespace Bluegrams.Calcex.Tests
         }
 
         [DataTestMethod]
-        [DataRow("((pi*2.13))/70%12", true, null)]
-        [DataRow("2+3*7-h*-4", false, typeof(ParserCharException))]
-        [DataRow("15*sin(12, 2)", false, typeof(ParserFunctionArgumentException))]
-        [DataRow("log(10)", false, typeof(ParserFunctionArgumentException))]
-        [DataRow("(3.141*5.6-sin(3)*()+5)", false, typeof(ParserSyntaxException))]
-        public void IsValid_Exceptions(string exp, bool valid, Type exType)
+        [DataRow("2+3*7-h*-4", typeof(ParserCharException))]
+        [DataRow("15*sin(12, 2)", typeof(ParserFunctionArgumentException))]
+        [DataRow("log(10)", typeof(ParserFunctionArgumentException))]
+        [DataRow("(3.141*5.6-sin(3)*()+5)", typeof(ParserSyntaxException))]
+        [DataRow("sum(2, 3, 4, 5)+12*2", typeof(ParserSyntaxException))]
+        [DataRow("prod(1a, 1, 5, 1a*2)", typeof(ParserSyntaxException))]
+        [DataRow("sum(i, 1, 10, i^2)+i", typeof(ParserCharException))]
+        public void IsValid_Exceptions(string exp, Type exType)
         {
             var parser = new Parser("a", "b");
-            Assert.AreEqual(valid, parser.IsValid(exp, out Exception exception));
-            if (!valid)
-            {
-                Assert.IsInstanceOfType(exception, exType);
-            }
+            Assert.AreEqual(false, parser.IsValid(exp, out Exception exception));
+            Assert.IsInstanceOfType(exception, exType);
         }
 
         [DataTestMethod]

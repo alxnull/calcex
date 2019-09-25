@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     internal static class ParseTree
     {

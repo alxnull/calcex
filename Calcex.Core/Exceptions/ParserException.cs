@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex
 {
     /// <summary>
     /// The base class of all parsing exceptions.

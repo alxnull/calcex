@@ -1,4 +1,4 @@
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     /// <summary>
     /// Enumeration of possible decimal separator styles.

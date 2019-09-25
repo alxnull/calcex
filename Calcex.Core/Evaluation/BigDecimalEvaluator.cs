@@ -1,24 +1,24 @@
 ﻿using System;
-using Bluegrams.Calcex.Numerics;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Numerics;
+using Calcex.Parsing;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     /// <summary>
     /// WARNING: This evaluator is experimental.
     /// </summary>
     public class BigDecimalEvaluator : Evaluator<BigDecimal>
     {
-        // not supported: Power, Sqrt, Cbrt, Sin, Cos, Tan, Abs, Log10, LogE, ASin, ACos, ATan, Log, Ceil, Round, Sign, Trunc, Min, Max, Avg,
-        // Sinh, Cosh, Tanh, And, Or, Xor, UnsignedRightShift
+        // not supported: Power, Exp, Sqrt, Cbrt, Sin, Cos, Tan, Abs, Log10, LogE, ASin, ACos, ATan, Log, Ceil, Round, Sign, Trunc, Min, Max, Avg,
+        // Sinh, Cosh, Tanh, And, Or, Xor, UnsignedRightShift, Sum, Prod
 
         // Use DoubleEvaluator and cast to BigDecimal if operation not supported.
         DoubleEvaluator fallback;
 
-        public BigDecimalEvaluator(Parser parser, EvaluationOptions options) : base(parser, options)
+        public BigDecimalEvaluator(Parser parser, EvaluationContext context) : base(parser, context)
         {
-            fallback = new DoubleEvaluator(parser, options);
+            fallback = new DoubleEvaluator(parser, context);
         }
 
         private BigDecimal eval(TreeToken token) => token.Evaluate(this);
@@ -68,7 +68,7 @@ namespace Bluegrams.Calcex.Evaluation
                 case ParserSymbols.RightShift:
                     return (long)eval(token.SubTokens[0]) >> (int)eval(token.SubTokens[1]);
                 default:
-                    if (options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
+                    if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
                     double result = token.Evaluate(fallback);
                     if (double.IsNaN(result)) throw new ParserArithmeticException(token.Position);
                     else return (BigDecimal)result;
@@ -78,7 +78,7 @@ namespace Bluegrams.Calcex.Evaluation
         public override BigDecimal EvaluateFunction(FuncToken token)
         {
             if (token is CallerFuncToken)
-                return parser.FunctionsDict[token.Symbol].Invoke(fallback.EvaluateTokens(((FuncToken)token).SubTokens.ToArray()));
+                return parser.FunctionsDict[token.Symbol].Invoke(fallback.EvaluateTokens((token).SubTokens.ToArray()));
             switch (token.Symbol)
             {
                 case ParserSymbols.Negate:
@@ -103,11 +103,19 @@ namespace Bluegrams.Calcex.Evaluation
                         ? eval(token.SubTokens[1])
                         : eval(token.SubTokens[2]);
                 default:
-                    if (options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
+                    if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
                     double result = token.Evaluate(fallback);
                     if (double.IsNaN(result)) throw new ParserArithmeticException(token.Position);
                     else return (BigDecimal)result;
             }
+        }
+
+        public override BigDecimal EvaluateVarFunction(VarFuncToken token)
+        {
+            if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
+            double result = token.Evaluate(fallback);
+            if (double.IsNaN(result)) throw new ParserArithmeticException(token.Position);
+            else return result;
         }
 
         public override BigDecimal EvaluateNumber(NumberToken token)

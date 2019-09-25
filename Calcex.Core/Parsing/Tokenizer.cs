@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Parsing.Tokens;
 using System.Globalization;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     internal class Tokenizer
     {
         internal char DecimalSeparator { get; private set; }
         internal char ArgumentSeparator { get; private set; }
-        internal Dictionary<string, Tuple<Type, int>> TokenDict;
+        internal SortedDictionary<string, Tuple<Type, int>> TokenDict;
         internal NumberFormatInfo NumberFormat;
         
         private string NumberPattern 
@@ -23,11 +23,12 @@ namespace Bluegrams.Calcex.Parsing
             }
         }
 
-        private Regex numberRegex;
+        private static Regex numberRegex;
+        private static readonly Regex varFuncRegex = new Regex(@"^\(\s*([a-zA-Z]+[0-9]*)\s*,");
 
         internal Tokenizer()
         {
-            TokenDict = new Dictionary<string, Tuple<Type, int>>()
+            TokenDict = new SortedDictionary<string, Tuple<Type, int>>(new DescendingStringComparer())
             {
                 // Operators
                 {ParserSymbols.Add, token(typeof(OperatorToken))},
@@ -54,6 +55,7 @@ namespace Bluegrams.Calcex.Parsing
                 {ParserSymbols.Negate, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Sqrt, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Cbrt, token(typeof(FuncToken), 1)},
+                {ParserSymbols.Exp, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Sin, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Cos, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Tan, token(typeof(FuncToken), 1)},
@@ -83,6 +85,8 @@ namespace Bluegrams.Calcex.Parsing
                 {ParserSymbols.XorFunc, token(typeof(FuncToken), -1)},
                 {ParserSymbols.Fact, token(typeof(FuncToken), 1)},
                 {ParserSymbols.Cond, token(typeof(FuncToken), 3)},
+                {ParserSymbols.Sum, token(typeof(VarFuncToken), 4)},
+                {ParserSymbols.Prod, token(typeof(VarFuncToken), 4)},
                 // Brackets / Constants
                 {ParserSymbols.LBracket, token(typeof(LeftBracketToken))},
                 {ParserSymbols.RBracket, token(typeof(RightBracketToken))},
@@ -122,12 +126,11 @@ namespace Bluegrams.Calcex.Parsing
 
         internal LinkedList<Token> Read(InputStream str)
         {
-            TokenDict = TokenDict.OrderByDescending(m => m.Key).ToDictionary(x => x.Key, x => x.Value);
             LinkedList<Token> tokenlist = new LinkedList<Token>();
             while (!str.AtEnd)
             {
                 Token tok = readNextToken(tokenlist, tokenlist.Last?.Value, str);
-                if (tok is FuncToken) tokenlist.AddLast(readFuncParams(tokenlist.Last?.Value, str));
+                if (tok is FuncToken funcToken) tokenlist.AddLast(readFuncParams(funcToken, str));
             }
             return tokenlist;
         }
@@ -136,13 +139,32 @@ namespace Bluegrams.Calcex.Parsing
         /// Reads the arguments given to a function and puts them into a FuncParamToken.
         /// </summary>
         /// <returns>The created FuncParamToken conatining the arguments given to the function.</returns>
-        private Token readFuncParams(Token funcToken, InputStream str)
+        private Token readFuncParams(FuncToken funcToken, InputStream str)
         {
             if (str.AtEnd) throw new ParserSyntaxException("Invalid function usage.", funcToken.Position);
             FuncParamToken paramtok = new FuncParamToken(str.Position);
             LinkedList<Token> subTokenList = new LinkedList<Token>();
             int open = 0, close = 0;
             bool withBrackets = false;
+            string removeVar = null;
+            // Match the index variable if it's a VarFuncToken.
+            if (funcToken is VarFuncToken varFuncToken)
+            {
+                var match = varFuncRegex.Match(str.InputString);
+                if (match.Success)
+                {
+                    withBrackets = true; open++;
+                    var varToken = new VarToken(match.Groups[1].ToString(), str.Position);
+                    paramtok.ParamList.Add(new LinkedList<Token>(new[] { varToken }));
+                    str.MoveForward(match.Length);
+                    if (!TokenDict.ContainsKey(varToken.Symbol))
+                    {
+                        removeVar = varToken.Symbol;
+                        TokenDict.Add(removeVar, new Tuple<Type, int>(typeof(VarToken), 0));
+                    }
+                }
+                else throw new ParserSyntaxException("Invalid index variable definition.", str.Position);
+            }
             Token tok = funcToken;
             do
             {
@@ -160,12 +182,14 @@ namespace Bluegrams.Calcex.Parsing
                     { withBrackets = true; subTokenList.RemoveLast(); };
                 } 
                 else if (tok is RightBracketToken) close++;
-                if (tok is FuncToken) subTokenList.AddLast(readFuncParams(tok, str));
+                if (tok is FuncToken func) subTokenList.AddLast(tok = readFuncParams(func, str));
             }
             while (!str.AtEnd && (open != close));
             if (open != close) throw new ParserBracketException("Unequal number of opening and closing brackets.", str.Position);
             paramtok.ParamList.Add(subTokenList);
             if (withBrackets) paramtok.ParamList[paramtok.ParamList.Count - 1].RemoveLast();
+            if (removeVar != null)
+                TokenDict.Remove(removeVar);
             return paramtok;
         }
 

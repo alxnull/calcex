@@ -1,10 +1,9 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Bluegrams.Calcex;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Numerics;
+using Calcex.Parsing;
+using Calcex.Numerics;
 
-namespace Bluegrams.Calcex.Tests
+namespace Calcex.Tests
 {
     [TestClass]
     public class ParserTests
@@ -13,7 +12,7 @@ namespace Bluegrams.Calcex.Tests
         public void SeparatorStyle_Test()
         {
             Parser parser = new Parser();
-            parser.AddMultiParamFunction("add", calc2);
+            parser.AddFunction("add", calc2);
             Assert.AreEqual(1018.65, parser.Parse("add(5.5, 1000.5, 12.65)").Evaluate());
             parser.SeparatorStyle = SeparatorStyle.Comma;
             Assert.AreEqual(1018.65, parser.Parse("add(5,5; 1000,5; 12,65)").Evaluate());
@@ -25,8 +24,7 @@ namespace Bluegrams.Calcex.Tests
         [DataRow(false, double.NaN, "2*asin(5)/6-76")]
         public void TryEvaluate_Test(bool success, double expected, string input)
         {
-            double result;
-            Assert.AreEqual(success, Parser.TryEvaluate(input, out result));
+            Assert.AreEqual(success, Parser.TryEvaluate(input, out double result));
             Assert.AreEqual(expected, result);
         }
 
@@ -160,16 +158,16 @@ namespace Bluegrams.Calcex.Tests
         public void CustomFunctions_Test()
         {
             var parser = new Parser();
-            parser.AddOneParamFunction("sqr", calc);
-            parser.AddTwoParamFunction("add", (a, b) => a + b);
-            parser.AddThreeParamFunction("av", (a, b, c) => (a + b + c) / 3);
-            parser.AddMultiParamFunction("sum", calc2);
+            parser.AddFunction("sqr", calc);
+            parser.AddFunction("add", (a, b) => a + b);
+            parser.AddFunction("av", (a, b, c) => (a + b + c) / 3);
+            parser.AddFunction("sumv", calc2);
             parser.AddFunction("circ", "pi*r^2", "r");
             Assert.IsTrue(Array.IndexOf(parser.CustomFunctions, "add") > -1);
             Assert.AreEqual(64516, parser.Parse("sqr254").Evaluate());
             Assert.ThrowsException<ParserFunctionArgumentException>(() => parser.Parse("add(1, 2, 3)"));
             Assert.AreEqual(20, parser.Parse("av(32, 22, 6)").Evaluate());
-            Assert.AreEqual(12.9, parser.Parse("sum(7, -4, -2.5, 12.4)").Evaluate());
+            Assert.AreEqual(12.9, parser.Parse("sumv(7, -4, -2.5, 12.4)").Evaluate());
             Assert.AreEqual(Math.PI * 295.84, parser.Parse("circ(17.2)").Evaluate());
         }
 
@@ -180,7 +178,7 @@ namespace Bluegrams.Calcex.Tests
             var parser = new Parser();
             foreach (var s in vars)
             {
-                parser.AddOneParamFunction(s, calc);
+                parser.AddFunction(s, calc);
             }
             parser.RemoveFunction("xyz");
             Assert.IsFalse(Array.IndexOf(parser.CustomFunctions, "xyz") > -1);

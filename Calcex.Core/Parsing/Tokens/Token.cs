@@ -1,5 +1,5 @@
 ﻿
-namespace Bluegrams.Calcex.Parsing.Tokens
+namespace Calcex.Parsing.Tokens
 {
     /// <summary>
     /// The base class of all tokens used in the parser.

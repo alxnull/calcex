@@ -1,6 +1,6 @@
 using System;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     /// <summary>
     /// Specifies options for the evaluation of expressions.

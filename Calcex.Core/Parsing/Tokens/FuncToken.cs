@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace Bluegrams.Calcex.Parsing.Tokens
+namespace Calcex.Parsing.Tokens
 {
     public class FuncToken : StructToken
     {
-        public int ArgCount { get; private set; }
+        public int ArgCount { get; set; }
 
         public FuncToken(string symbol, int pos, int argCount) : base(symbol, pos)
         {

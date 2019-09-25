@@ -1,11 +1,11 @@
 ﻿using System;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     public class PostfixStringEvaluator : StringEvaluator
     {
-        public PostfixStringEvaluator(Parser parser, EvaluationOptions options) : base(parser, options) { }
+        public PostfixStringEvaluator(Parser parser, EvaluationContext context) : base(parser, context) { }
 
         public override string EvaluateOperator(OperatorToken token)
         {

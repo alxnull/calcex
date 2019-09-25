@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     /// <summary>
     /// A class containing all valid parser symbols.
@@ -56,11 +56,13 @@ namespace Bluegrams.Calcex.Parsing
         public const string UnsignedRightShift = ">>>";
 
         // --- Functions ---
-        // Roots
+        // Roots / Powers
         [Description("Calculates the square root of a number", "sqrt(49)", "7")]
         public const string Sqrt = "sqrt";
         [Description("Calculates the cubic root of a number", "cbrt(27)", "3")]
         public const string Cbrt = "cbrt";
+        [Description("Raises e to the specified power.", "exp(2)", "e^2")]
+        public const string Exp = "exp";
         // Trigonometry
         [Description("Calculates the sine of an angle", "sin(0)", "0")]
         public const string Sin = "sin";
@@ -113,19 +115,23 @@ namespace Bluegrams.Calcex.Parsing
         [Description("Calculates the arithmetic mean of a given range of values", "avg(6, -5, 2)", "1")]
         public const string Avg = "avg";
         // Booleans
-        [Description("Performs a boolean and operation between all given values", "and(true, false, 0=0)", "false")]
+        [Description("Performs a boolean 'and' operation between all given values", "and(true, false, 0=0)", "false")]
         public const string AndFunc = "and";
-        [Description("Performs a boolean or operation between all given values", "or(true, false, 0=0)", "true")]
+        [Description("Performs a boolean 'or' operation between all given values", "or(true, false, 0=0)", "true")]
         public const string OrFunc = "or";
-        [Description("Performs a boolean not operation", "not true", "false")]
+        [Description("Performs a boolean 'not' operation", "not true", "false")]
         public const string Not = "not";
-        [Description("Performs a boolean xor operation between all given values", "xor(true, false, 0=0)", "false")]
+        [Description("Performs a boolean 'xor' operation between all given values", "xor(true, false, 0=0)", "false")]
         public const string XorFunc = "xor";
         // Misc
         [Description("Calculates the factorial of a number", "fact(5)", "120")]
         public const string Fact = "fact";
         [Description("Returns one of two values based on a condition", "if(-5 >= 0, 1, -1)", "-1")]
         public const string Cond = "if";
+        [Description("Calculates the sum of a sequence of terms", "sum(i, 1, 10, 2^i)", "2046")]
+        public const string Sum = "sum";
+        [Description("Calculates the product of a sequence of terms", "prod(i, 1, 5, i)", "120")]
+        public const string Prod = "prod";
 
         // --- Constants ---
         [Description("Represents the number Pi")]

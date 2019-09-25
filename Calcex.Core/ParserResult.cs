@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using Bluegrams.Calcex.Evaluation;
-using Bluegrams.Calcex.Numerics;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Evaluation;
+using Calcex.Parsing.Tokens;
 using System.Linq;
+using System.Linq.Expressions;
 
-namespace Bluegrams.Calcex
+namespace Calcex
 {
     /// <summary>
     /// Represents the result of an expression parsed by the math parser.
     /// </summary>
     public class ParserResult
     {
-        private Parser parser;
+        private readonly Parser parser;
         private TreeToken treeToken;
 
         internal ParserResult(Parser parser, TreeToken treeToken)
@@ -31,7 +30,8 @@ namespace Bluegrams.Calcex
         /// <returns>The evaluated value of type T.</returns>
         public T Evaluate<T,U>(EvaluationOptions options = null) where U : Evaluator<T>
         {
-            Evaluator<T> eval = (Evaluator<T>)Activator.CreateInstance(typeof(U), parser, options ?? new EvaluationOptions());
+            var context = new EvaluationContext(options ?? new EvaluationOptions(), null);
+            Evaluator<T> eval = (Evaluator<T>)Activator.CreateInstance(typeof(U), parser, context);
             return treeToken.Evaluate(eval);
         }
         
@@ -56,16 +56,6 @@ namespace Bluegrams.Calcex
         }
 
         /// <summary>
-        /// Evaluates the value of the parsed expression as BigDecimal.
-        /// </summary>
-        /// <param name="options">Specifies the used evaluation options.</param>
-        /// <returns>The evaluated value as BigDecimal.</returns>
-        public BigDecimal EvaluateBigDecimal(EvaluationOptions options = null)
-        {
-            return Evaluate<BigDecimal, BigDecimalEvaluator>(options);
-        }
-
-        /// <summary>
         /// Evaluates the value of the parsed expression as boolean.
         /// </summary>
         /// <param name="options">Specifies the used evaluation options.</param>
@@ -77,6 +67,75 @@ namespace Bluegrams.Calcex
             if (Math.Abs(result - 1) <= epsilon) return true;
             else if (Math.Abs(result - 0) <= epsilon) return false;
             else throw new EvaluationException($"Cannot convert '{result}' to boolean.");
+        }
+
+        /// <summary>
+        /// Compiles the parsed expression into an executable delegate with one parameter.
+        /// </summary>
+        /// <param name="param1">The name of the variable used as first parameter.</param>
+        /// <param name="options">Specifies the used evaluation options.</param>
+        /// <returns>The compiled delegate for the parsed expression.</returns>
+        public Func<double, double> Compile(string param1,
+            EvaluationOptions options = null)
+        {
+            var paramColl = new ParameterCollection<double>(param1);
+            Expression expr = evalDelegate(options, paramColl);
+            var parameters = paramColl.GetParameters();
+            return Expression.Lambda<Func<double, double>>(expr, parameters).Compile();
+        }
+
+        /// <summary>
+        /// Compiles the parsed expression into an executable delegate with two parameters.
+        /// </summary>
+        /// <param name="param1">The name of the variable used as first parameter.</param>
+        /// <param name="param2">The name of the variable used as second parameter.</param>
+        /// <param name="options">Specifies the used evaluation options.</param>
+        /// <returns>The compiled delegate for the parsed expression.</returns>
+        public Func<double, double, double> Compile(string param1, string param2,
+            EvaluationOptions options = null)
+        {
+            var paramColl = new ParameterCollection<double>(param1, param2);
+            Expression expr = evalDelegate(options, paramColl);
+            var parameters = paramColl.GetParameters();
+            return Expression.Lambda<Func<double, double, double>>(expr, parameters).Compile();
+        }
+
+        /// <summary>
+        /// Compiles the parsed expression into an executable delegate with three parameters.
+        /// </summary>
+        /// <param name="param1">The name of the variable used as first parameter.</param>
+        /// <param name="param2">The name of the variable used as second parameter.</param>
+        /// <param name="param3">The name of the variable used as third parameter.</param>
+        /// <param name="options">Specifies the used evaluation options.</param>
+        /// <returns>The compiled delegate for the parsed expression.</returns>
+        public Func<double, double, double, double> Compile(string param1, string param2, string param3,
+            EvaluationOptions options = null)
+        {
+            var paramColl = new ParameterCollection<double>(param1, param2, param3);
+            Expression expr = evalDelegate(options, paramColl);
+            var parameters = paramColl.GetParameters();
+            return Expression.Lambda<Func<double, double, double, double>>(expr, parameters).Compile();
+        }
+
+        /// <summary>
+        /// Compiles the parsed expression into an executable delegate taking an array as parameter.
+        /// </summary>
+        /// <param name="paramVars">An array of variavles names used as parameters.</param>
+        /// <param name="options">Specifies the used evaluation options.</param>
+        /// <returns>The compiled delegate taking values for the given variables in the specified order.</returns>
+        public ArrayFunc Compile(string[] paramVars, EvaluationOptions options = null)
+        {
+            var paramColl = new IndexedParameterExpression(paramVars);
+            Expression expr = evalDelegate(options, paramColl);
+            var parameters = paramColl.GetParameters();
+            return Expression.Lambda<ArrayFunc>(expr, parameters).Compile();
+        }
+
+        private Expression evalDelegate(EvaluationOptions options, IParameterCollection paramColl)
+        {
+            var context = new EvaluationContext(options ?? new EvaluationOptions(), paramColl);
+            var eval = new ExpressionTreeEvaluator(parser, context);
+            return treeToken.Evaluate(eval);
         }
 
         /// <summary>
@@ -101,15 +160,9 @@ namespace Bluegrams.Calcex
         /// <returns>A dictionary containing the given values and the evaluated results.</returns>
         public Dictionary<double, double> EvaluateList(string variable, IEnumerable<double> values, EvaluationOptions options = null)
         {
-            var evaluator = new DoubleEvaluator(parser, options ?? new EvaluationOptions());
-            var results = new Dictionary<double, double>();
-            foreach (double value in values)
-            {
-                parser.SetVariable(variable, value);
-                var result = treeToken.Evaluate(evaluator);
-                results.Add(value, result);
-            }
-            return results;
+            var context = new EvaluationContext(options ?? new EvaluationOptions(), null);
+            var func = Compile(variable, options);
+            return values.ToDictionary(v => v, v => func(v));
         }
 
         /// <summary>

@@ -1,18 +1,18 @@
 ﻿using System;
-using Bluegrams.Calcex.Parsing.Tokens;
-using Bluegrams.Calcex.Parsing;
+using Calcex.Parsing.Tokens;
+using Calcex.Parsing;
 using System.Linq;
 using System.Collections.Generic;
-using Bluegrams.Calcex.Numerics;
+using Calcex.Numerics;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     /// <summary>
     /// Evaluates an expression to a double value.
     /// </summary>
     public class DoubleEvaluator : Evaluator<double>
     {
-        public DoubleEvaluator(Parser parser, EvaluationOptions options) : base(parser, options) {}
+        public DoubleEvaluator(Parser parser, EvaluationContext context) : base(parser, context) {}
 
         public static Dictionary<string, double> ConstantsDict = new Dictionary<string, double>()
         {
@@ -45,17 +45,17 @@ namespace Bluegrams.Calcex.Evaluation
                     return eval(token.SubTokens[0]) % eval(token.SubTokens[1]);
                 // Comparison operators
                 case ParserSymbols.Equal:
-                    return Math.Abs(eval(token.SubTokens[0]) - eval(token.SubTokens[1])) <= options.DoubleCompareEpsilon ? 1 : 0;
+                    return Math.Abs(eval(token.SubTokens[0]) - eval(token.SubTokens[1])) <= Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 case ParserSymbols.LessThan:
-                    return eval(token.SubTokens[0]) < eval(token.SubTokens[1]) - options.DoubleCompareEpsilon ? 1 : 0;
+                    return eval(token.SubTokens[0]) < eval(token.SubTokens[1]) - Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 case ParserSymbols.GreaterThan:
-                    return eval(token.SubTokens[0]) > eval(token.SubTokens[1]) + options.DoubleCompareEpsilon ? 1 : 0;
+                    return eval(token.SubTokens[0]) > eval(token.SubTokens[1]) + Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 case ParserSymbols.LessEqual:
-                    return eval(token.SubTokens[0]) <= eval(token.SubTokens[1]) + options.DoubleCompareEpsilon ? 1 : 0;
+                    return eval(token.SubTokens[0]) <= eval(token.SubTokens[1]) + Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 case ParserSymbols.GreaterEqual:
-                    return eval(token.SubTokens[0]) >= eval(token.SubTokens[1]) - options.DoubleCompareEpsilon ? 1 : 0;
+                    return eval(token.SubTokens[0]) >= eval(token.SubTokens[1]) - Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 case ParserSymbols.NotEqual:
-                    return Math.Abs(eval(token.SubTokens[0]) - eval(token.SubTokens[1])) > options.DoubleCompareEpsilon ? 1 : 0;
+                    return Math.Abs(eval(token.SubTokens[0]) - eval(token.SubTokens[1])) > Context.Options.DoubleCompareEpsilon ? 1 : 0;
                 // Boolean/ bitwise operators
                 case ParserSymbols.And:
                     var andRes = Convert.ToBoolean(eval(token.SubTokens[0])) && Convert.ToBoolean(eval(token.SubTokens[1]));
@@ -76,6 +76,7 @@ namespace Bluegrams.Calcex.Evaluation
                 case ParserSymbols.UnsignedRightShift:
                     return (uint)eval(token.SubTokens[0]) >> (int)eval(token.SubTokens[1]);
                 default:
+                    if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
                     return double.NaN;
             }
         }
@@ -83,7 +84,7 @@ namespace Bluegrams.Calcex.Evaluation
         public override double EvaluateFunction(FuncToken token)
         {
             if (token is CallerFuncToken)
-                return parser.FunctionsDict[token.Symbol].Invoke(EvaluateTokens(((FuncToken)token).SubTokens.ToArray()));
+                return parser.FunctionsDict[token.Symbol].Invoke(EvaluateTokens((token).SubTokens.ToArray()));
             switch (token.Symbol)
             {
                 case ParserSymbols.Negate:
@@ -92,6 +93,8 @@ namespace Bluegrams.Calcex.Evaluation
                     return Math.Sqrt(eval(token.SubTokens[0]));
                 case ParserSymbols.Cbrt:
                     return Math.Pow(eval(token.SubTokens[0]), (double)1 / 3);
+                case ParserSymbols.Exp:
+                    return Math.Exp(eval(token.SubTokens[0]));
                 case ParserSymbols.Sin:
                     return Math.Sin(eval(token.SubTokens[0]));
                 case ParserSymbols.Cos:
@@ -139,20 +142,17 @@ namespace Bluegrams.Calcex.Evaluation
                 case ParserSymbols.Avg:
                     return EvaluateTokens(token.SubTokens.ToArray()).Average();
                 case ParserSymbols.AndFunc:
-                    var andFuncRes = true;
-                    foreach (var value in EvaluateTokens(token.SubTokens.ToArray()))
-                        andFuncRes &= Convert.ToBoolean(value);
-                    return andFuncRes ? 1 : 0;
+                    return EvaluateTokens(token.SubTokens.ToArray())
+                        .Select(v1 => Convert.ToBoolean(v1))
+                        .Aggregate((v1, v2) => v1 & v2) ? 1 : 0;
                 case ParserSymbols.OrFunc:
-                    var orFuncRes = false;
-                    foreach (var value in EvaluateTokens(token.SubTokens.ToArray()))
-                        orFuncRes |= Convert.ToBoolean(value);
-                    return orFuncRes ? 1 : 0;
+                    return EvaluateTokens(token.SubTokens.ToArray())
+                        .Select(v1 => Convert.ToBoolean(v1))
+                        .Aggregate((v1, v2) => v1 | v2) ? 1 : 0;
                 case ParserSymbols.XorFunc:
-                    var xorFuncRes = false;
-                    foreach (var value in EvaluateTokens(token.SubTokens.ToArray()))
-                        xorFuncRes ^= Convert.ToBoolean(value);
-                    return xorFuncRes ? 1 : 0;
+                    return EvaluateTokens(token.SubTokens.ToArray())
+                        .Select(v1 => Convert.ToBoolean(v1))
+                        .Aggregate((v1, v2) => v1 ^ v2) ? 1 : 0;
                 case ParserSymbols.Not:
                     return !Convert.ToBoolean(eval(token.SubTokens[0])) ? 1 : 0;
                 case ParserSymbols.Fact:
@@ -167,6 +167,32 @@ namespace Bluegrams.Calcex.Evaluation
                         ? eval(token.SubTokens[1])
                         : eval(token.SubTokens[2]);
                 default:
+                    if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
+                    return double.NaN;
+            }
+        }
+
+        public override double EvaluateVarFunction(VarFuncToken token)
+        {
+            Func<double, double> func;
+            int start;
+            switch (token.Symbol)
+            {
+                case ParserSymbols.Sum:
+                    func = ExpressionTreeEvaluator.CreateDelegate(token.SubTokens[3],
+                        token.VariableSymbol, parser, Context.Options);
+                    start = (int)eval(token.SubTokens[1]);
+                    return Enumerable.Range(start, (int)eval(token.SubTokens[2]) - start + 1)
+                                .Select(v => func(v)).Sum(); 
+                case ParserSymbols.Prod:
+                    func = ExpressionTreeEvaluator.CreateDelegate(token.SubTokens[3],
+                        token.VariableSymbol, parser, Context.Options);
+                    start = (int)eval(token.SubTokens[1]);
+                    return Enumerable.Range(start, (int)eval(token.SubTokens[2]) - start + 1)
+                                .Select(v => func(v))
+                                .Aggregate((v1, v2) => v1 * v2);
+                default:
+                    if (Context.Options.StrictMode) throw new UnsupportedOperationException(token.Symbol);
                     return double.NaN;
             }
         }

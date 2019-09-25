@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     internal class InputStream
     {

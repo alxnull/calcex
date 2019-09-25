@@ -1,6 +1,6 @@
 using System;
 
-namespace Bluegrams.Calcex.CalcexConsole
+namespace Calcex.CalcexConsole
 {
     public class Command
     {

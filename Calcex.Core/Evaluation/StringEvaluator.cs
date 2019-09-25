@@ -1,12 +1,14 @@
 ﻿using System;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Parsing.Tokens;
+using System.Linq;
+using System.Text;
+using Calcex.Parsing;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Evaluation
+namespace Calcex.Evaluation
 {
     public class StringEvaluator : Evaluator<string>
     {
-        public StringEvaluator(Parser parser, EvaluationOptions options) : base(parser, options) { }
+        public StringEvaluator(Parser parser, EvaluationContext context) : base(parser, context) { }
 
         public override string EvaluateOperator(OperatorToken token)
         {
@@ -36,14 +38,18 @@ namespace Bluegrams.Calcex.Evaluation
 
         public override string EvaluateFunction(FuncToken token)
         {
-            string expr = token.Symbol + "(";
-            foreach (TreeToken tok in token.SubTokens)
-                expr += tok.Evaluate(this) + parser.Tokenizer.ArgumentSeparator;
-            expr = expr.Trim();
-            expr = expr.TrimEnd(parser.Tokenizer.ArgumentSeparator);
-            expr += ")";
-            return expr;
+            var sb = new StringBuilder(token.Symbol);
+            sb.Append("(");
+            sb.Append(String.Join(
+                parser.Tokenizer.ArgumentSeparator.ToString(),
+                token.SubTokens.Select(t => t.Evaluate(this))
+                ));
+            sb.Append(")");
+            return sb.ToString();
         }
+
+        public override string EvaluateVarFunction(VarFuncToken token)
+            => EvaluateFunction(token);
 
         public override string EvaluateNumber(NumberToken token) => token.Symbol;
         public override string EvaluateVar(VarToken token) => token.Symbol;

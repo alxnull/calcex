@@ -1,83 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using Bluegrams.Calcex;
-using Bluegrams.Calcex.Parsing;
-using Bluegrams.Calcex.Evaluation;
+using Calcex.Parsing;
+using Calcex.Evaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Bluegrams.Calcex.Tests
+namespace Calcex.Tests
 {
     [TestClass]
     public class ParserResultTests
     {
         [DataTestMethod]
-        // Test addition, subtraction, '-' sign
-        [DataRow(2500, "1 000 + 1 500", 0)]
-        [DataRow(20, "4.5--12.5--3", 0)]
-        [DataRow(40.7, "+56-+8.3--2+-9+-7++0--7", 1E-12)]
-        // Test multiplication, division
-        [DataRow(-63, "7.5*(-14)*1.2*0.5", 0)]
-        [DataRow(691 / 45.0, "691/15/3", 1E-12)]
-        // Test brackets
-        [DataRow(-30, "(((-2)*(12-6))-(13+5))", 0)]
-        [DataRow(-299.877, "((((4.123-546)+((-32))*(6-12.5))))+((((+(((34)))))))", 1E-12)]
-        [DataRow(9187 / 11660.0, "-5/-5++6^(12*-56++2/3.654)-(123.65/583)", 1E-12)]
-        // Test number notations
-        [DataRow(10.5, ".8+5.6-.4+.5+4", 0)]
-        [DataRow(1.3E+12, "5E+12*4E-5*6.5E+3", 0.001)]
-        // Test power
-        [DataRow(512, "2^3^2", 0)]
-        [DataRow(4.294529258, "2^1.45^(9-12+3.5)^(-1)", 1E-8)]
-        [DataRow(-3.00407041116273e20, "-(((2+3)*pi)*12)^((2+3)+4)-5", 3e5)]
-        // Test modulo
-        [DataRow(8, "8653579%2478534%(12%5-43)%23", 0)]
-        public void EvaluateDouble_Operators(double expected, string input, double epsilon)
+        [DynamicData(nameof(TestData.GetCommonData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDouble_Common(double expected, string input, double epsilon)
         {
             Parser parser = new Parser();
             Assert.AreEqual(expected, parser.Parse(input).Evaluate(), epsilon);
         }
 
         [DataTestMethod]
-        // Test cbrt, sqrt
-        [DataRow(2, "sqrt2^2", 1e-14)]
-        [DataRow(-8146.575991708, "sqrt1897.5*-187.23+sqrt(89-4)", 1e-8)]
-        [DataRow(17.707912, "12*cbrt0.85/0.5-cbrt(12/3--123)", 1e-8)]
-        // Test lg, abs, ln, log
-        [DataRow(54.08, "26.54*lg(abs(800/-8))+ln(e)", 1e-8)]
-        [DataRow(20, "log(pi, lg(10))+log(2, 512)+log(5, 48828125)", 1e-8)]
-        // Test sin, cos, tan, rad
-        [DataRow(0.961592814325542, "sin(783.5*(5+2400)+-1.5)", 1e-8)]
-        [DataRow(-5, "cos(rad(180))*5+tan(rad(360))", 1e-8)]
-        // Test deg, asin, atan
-        [DataRow(1350, "deg(asin(0.5))*deg(atan(1))", 1e-8)]
-        // test sinh, cosh, tanh
-        [DataRow(74.03474733, "cosh(-5)+tanh12.5-sinh(10.5-9.5)", 1e-8)]
-        // Test fact
-        [DataRow(3628800, "fact10", 0)]
-        // Test min, max, sign, avg
-        [DataRow(24.3, "min(45.2, max(-123.5, sgn(65436), 24.3, 3.5))", 0)]
-        [DataRow(34.5, "avg(-54, 19, 43, 123, 99, -23)", 0)]
-        // Test if condition
-        [DataRow(5, "if(12.5-6=6.5, 5, -5)", 0)]
-        [DataRow(0, "if(-22*(-1)>10=false, 1, 0)", 0)]
-        // Test misc
-        [DataRow(-13.433252489462211, "+(-2*6.789/212*sin(4.5^2)-43*pi^(cos(e)))+sqrt(pi)", 1e-8)]
-        public void EvaluateDouble_Functions(double expected, string input, double delta)
+        [DynamicData(nameof(TestData.GetIndexVarData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDouble_IndexVariables(int expected, string input)
         {
             Parser parser = new Parser();
-            Assert.AreEqual(expected, parser.Parse(input).Evaluate(), delta);
+            parser.SetVariable("i", 0);
+            Assert.AreEqual(expected, parser.Parse(input).Evaluate());
         }
 
         [DataTestMethod]
-        // Test operators
-        [DataRow(true, "12.5=20-8+0.5")]
-        [DataRow(false, "pi<0")]
-        [DataRow(true, "12^0>=12=false")]
-        [DataRow(false, "2*9/3<>3+3&&13*0.1>1")]
-        [DataRow(true, "76*0.01=0.76||false||0")]
-        // Test boolean functions
-        [DataRow(false, "not or(false, and(-12=12, true), (-12)^2=288/2, 0<>0)")]
-        [DataRow(false, "xor(12||0, (sin(165)&&1)=true, -65*(-3)*(-2.5)>0)")]
+        [DynamicData(nameof(TestData.GetBooleanData), typeof(TestData), DynamicDataSourceType.Method)]
         public void EvaluateBoolean(bool expected, string input)
         {
             var parser = new Parser();
@@ -85,46 +34,39 @@ namespace Bluegrams.Calcex.Tests
         }
 
         [DataTestMethod]
-        [DataRow(691, "547.98|3487&657.2")]
-        [DataRow(479523, "7672376>>4")]
-        [DataRow(-471592, "-7545463>>4")]
-        [DataRow(10880, "(1985^|657)<<3")]
-        [DataRow(536870803, "-865>>>3")]
-        public void EvaluateDouble_Bitwise(double expected, string input)
+        [DynamicData(nameof(TestData.GetBitwiseData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDouble_Bitwise(int expected, string input)
         {
             var parser = new Parser();
             Assert.AreEqual(expected, parser.Parse(input).Evaluate());
         }
 
         [DataTestMethod]
-        [DataRow(double.NaN, "15/(87.5-87.5)")]
-        [DataRow(double.NaN, "sqrt(18-27)+5")]
-        [DataRow(double.NaN, "35+5-7*lg((12-32)/3)")]
-        public void EvaluateDouble_NaN(double expected, string input)
+        [DynamicData(nameof(TestData.GetNaNData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDouble_NaN(string input)
         {
             Parser parser = new Parser();
-            Assert.AreEqual(expected, parser.Parse(input).Evaluate());
-        }
-
-        private static IEnumerable<string[]> getEvaluateDecimalData()
-        {
-            for (int i = 1; i <= 10; i++)
-            {
-                string rest = new string('1', i);
-                yield return new string[] { String.Format("{0}.{1}", i.ToString(), rest), i.ToString(), String.Format("0.{0}", rest) };
-            }
+            Assert.AreEqual(double.NaN, parser.Parse(input).Evaluate());
         }
 
         [DataTestMethod]
-        [DataRow("5.1101", "5", "0.1101")]
-        [DataRow("123.123", "123.12", "0.003")]
-        [DynamicData(nameof(getEvaluateDecimalData), DynamicDataSourceType.Method)]
-        public void EvaluateDecimal_Subtraction(string a, string b, string c)
+        [DataRow("0.1101", "5.1101", "5")]
+        [DataRow("0.003", "123.123", "123.12")]
+        [DynamicData(nameof(TestData.GetEvaluateDecimalData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDecimal_Subtraction(string result, string a, string b)
         {
             var parser = new Parser();
             ParserResult res = parser.Parse(String.Format("{0} - {1}", a, b));
-            var expected = decimal.Parse(c, System.Globalization.CultureInfo.InvariantCulture);
+            var expected = decimal.Parse(result, System.Globalization.CultureInfo.InvariantCulture);
             Assert.AreEqual(expected, res.EvaluateDecimal());
+        }
+
+        [DataTestMethod]
+        [DynamicData(nameof(TestData.GetBitwiseData), typeof(TestData), DynamicDataSourceType.Method)]
+        public void EvaluateDecimal_Bitwise(int expected, string input)
+        {
+            var parser = new Parser();
+            Assert.AreEqual(expected, parser.Parse(input).EvaluateDecimal());
         }
 
         [DataTestMethod]
@@ -155,6 +97,7 @@ namespace Bluegrams.Calcex.Tests
         [DataRow("sin(9)-cos(124)%12.265", " sin(  +9  )  -  cos  124  %  12.265", SeparatorStyle.Dot)]
         [DataRow("(lg(4.2)-78)*12", "(((lg( 4.2 ) - (78)) * ((12))))", SeparatorStyle.Dot)]
         [DataRow("log(150;3)+4,98*max(12;33;-5)",  "log(150; 3) + 4,98 * max(12; +33; -5)",  SeparatorStyle.Comma)]
+        [DataRow("sum(i,0,10,2^i)", "sum(i, 0, 10, 2 ^ i)", SeparatorStyle.Dot)]
         public void InfixExpression_Test(string expected, string input, SeparatorStyle separator)
         {
             Parser parser = new Parser();

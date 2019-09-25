@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Bluegrams.Calcex.Parsing.Tokens;
+using Calcex.Parsing.Tokens;
 
-namespace Bluegrams.Calcex.Parsing
+namespace Calcex.Parsing
 {
     static class OperatorProperties
     {
-        private static Dictionary<string, byte> precedences
+        private static Dictionary<string, byte> Precedences
         {
             get
             {
@@ -46,7 +46,7 @@ namespace Bluegrams.Calcex.Parsing
             if (token is SignOperatorToken)
                 return byte.MaxValue;
             else if (token is OperatorToken opToken)
-                return precedences[opToken.Symbol];
+                return Precedences[opToken.Symbol];
             else return byte.MaxValue;
         }
 
